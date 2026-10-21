@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeAI Chat</title>
+
+    <!-- עיצוב הממשק: פריסה, אזור הודעות, שדה כתיבה והתאמה לנייד. -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap');
+
+        /* בסיס הדף ומעטפת הצ'אט המרכזית. */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0b1020;
+            color: #f8fafc;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat {
+            width: 100%;
+            max-width: 850px;
+            height: 90vh;
+            height: 90dvh;
+            max-height: 900px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            background: #111a2e;
+            border: 1px solid #26344e;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 80px #0005;
+        }
+
+        /* כותרת המותג ומצב החיבור. */
+        header {
+            padding: 22px 25px;
+            background: #151f35;
+            border-bottom: 1px solid #293650;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+        }
+
+        .logo {
+            width: 43px;
+            height: 43px;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #f9a83b, #ffcc72);
+            color: #10182a;
+            font-size: 23px;
+            font-weight: bold;
+        }
+
+        h1 {
+            margin: 0 0 5px;
+            font-size: 21px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: #9eafc8;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #36c98f;
+        }
+
+        /* אזור ההודעות, מסך הפתיחה והבועות של שני הצדדים. */
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+
+        .welcome {
+            margin: auto;
+            text-align: center;
+            max-width: 390px;
+            color: #b6c3d8;
+            line-height: 1.8;
+        }
+
+        .welcome-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .welcome h2 {
+            color: white;
+            font-size: 25px;
+            margin: 0 0 8px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 14px 17px;
+            border-radius: 17px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            font-size: 15px;
+        }
+
+        .user {
+            align-self: flex-start;
+            background: #f5a83c;
+            color: #172033;
+            border-bottom-right-radius: 5px;
+        }
+
+        .assistant {
+            align-self: flex-end;
+            background: #202c43;
+            border: 1px solid #30405c;
+            border-bottom-left-radius: 5px;
+            min-width: 70px;
+        }
+
+        /* חיווי כתיבה וסמן מהבהב בזמן הזרמת התשובה. */
+        .typing {
+            color: #94a3b8;
+            font-size: 13px;
+            padding: 0 5px;
+        }
+
+        .cursor::after {
+            content: "▋";
+            color: #f5a83c;
+            animation: blink 0.8s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* אזור כתיבת ההודעה, כפתור השליחה והפעולות התחתונות. */
+        .bottom {
+            padding: 18px 22px 12px;
+            border-top: 1px solid #293650;
+            background: #151f35;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            padding: 7px;
+            background: #0d1526;
+            border: 1px solid #35435c;
+            border-radius: 17px;
+        }
+
+        textarea {
+            flex: 1;
+            min-width: 0;
+            resize: none;
+            max-height: 130px;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: white;
+            font: inherit;
+            font-size: 15px;
+            padding: 11px 10px;
+            line-height: 1.5;
+        }
+
+        textarea::placeholder {
+            color: #74839c;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            font: inherit;
+        }
+
+        .send {
+            width: 43px;
+            height: 43px;
+            flex-shrink: 0;
+            border-radius: 13px;
+            background: #f5a83c;
+            color: #121a2b;
+            font-size: 20px;
+            transition: 0.2s;
+        }
+
+        .send:hover {
+            background: #ffc56d;
+            transform: translateY(-1px);
+        }
+
+        .send:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding-top: 12px;
+            color: #71819b;
+            font-size: 11px;
+        }
+
+        .clear {
+            background: transparent;
+            color: #a6b5cb;
+            padding: 5px;
+        }
+
+        .clear:hover {
+            color: #ffc56d;
+        }
+
+        /* עיצוב הודעות שגיאה ופריסת המסך בטלפונים. */
+        .error {
+            color: #ff9b9b;
+            font-size: 13px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 550px) {
+            body {
+                padding: 0;
+            }
+
+            .chat {
+                height: 100vh;
+                height: 100dvh;
+                max-height: none;
+                min-height: 0;
+                border-radius: 0;
+                border: none;
+            }
+
+            header {
+                padding: 17px;
+            }
+
+            .messages {
+                padding: 17px;
+            }
+
+            .bottom {
+                padding: 12px;
+            }
+
+            .message {
+                max-width: 92%;
+            }
+
+            .status {
+                font-size: 10px;
+            }
+        }
+        :root {
+            color-scheme: light;
+            --ink: #19352f;
+            --muted: #71827d;
+            --green: #176b56;
+            --green-deep: #104b3d;
+            --lime: #d7f36a;
+            --line: #e3ebe6;
+            --surface: #fbfdfb;
+        }
+
+        body {
+            padding: 28px;
+            font-family: 'Heebo', sans-serif;
+            color: var(--ink);
+            background-color: #edf4ef;
+            background-image: radial-gradient(#c9d9d0 0.7px, transparent 0.7px);
+            background-size: 18px 18px;
+        }
+
+        .chat {
+            max-width: 980px;
+            height: min(880px, 92dvh);
+            min-height: 480px;
+            background: var(--surface);
+            border: 1px solid #dce8e0;
+            border-radius: 24px;
+            box-shadow: 0 28px 80px #173f3020, 0 4px 14px #173f300c;
+            animation: arrive 500ms ease-out both;
+        }
+
+        @keyframes arrive {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        header {
+            padding: 20px 28px;
+            background: #fff;
+            border-bottom-color: var(--line);
+        }
+
+        .brand { gap: 14px; }
+
+        .logo {
+            width: 46px;
+            height: 46px;
+            border-radius: 15px;
+            background: var(--green);
+            color: var(--lime);
+            font-size: 25px;
+            box-shadow: 0 5px 12px #176b5628;
+        }
+
+        h1 {
+            margin-bottom: 1px;
+            color: var(--ink);
+            font-size: 19px;
+            font-weight: 800;
+        }
+
+        .subtitle { color: var(--muted); font-size: 13px; }
+
+        .status {
+            padding: 8px 12px;
+            border: 1px solid #e2ece5;
+            border-radius: 999px;
+            background: #f5faf6;
+            color: #536a60;
+            font-size: 12px;
+        }
+
+        .dot {
+            background: #36a779;
+            box-shadow: 0 0 0 3px #36a77920;
+        }
+
+        .messages {
+            padding: 34px clamp(20px, 7vw, 76px);
+            gap: 18px;
+            background: linear-gradient(180deg, #f8fbf8 0%, #fbfdfb 100%);
+        }
+
+        .welcome {
+            max-width: 470px;
+            color: #71827d;
+            font-size: 15px;
+            line-height: 1.9;
+            animation: arrive 650ms 100ms ease-out both;
+        }
+
+        .welcome-icon {
+            display: grid;
+            width: 58px;
+            height: 58px;
+            place-items: center;
+            margin: 0 auto 20px;
+            border: 1px solid #e1ebd0;
+            border-radius: 19px;
+            background: #f1f8df;
+            color: var(--green);
+            font-size: 29px;
+        }
+
+        .welcome h2 {
+            margin-bottom: 9px;
+            color: var(--ink);
+            font-size: 29px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        .message {
+            max-width: min(78%, 650px);
+            padding: 13px 18px;
+            border-radius: 18px;
+            line-height: 1.8;
+            font-size: 15px;
+            animation: arrive 220ms ease-out both;
+        }
+
+        .user {
+            background: var(--green);
+            color: #fff;
+            border-bottom-right-radius: 5px;
+        }
+
+        .assistant {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 3px 10px #1d4b3908;
+        }
+
+        .usage {
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px dashed var(--line);
+            color: #8a9992;
+            direction: ltr;
+            font-size: 11px;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .typing { color: var(--muted); }
+        .cursor::after { color: #6e9d30; }
+
+        .bottom {
+            padding: 18px 28px 15px;
+            border-top-color: var(--line);
+            background: #fff;
+        }
+
+        .input-row {
+            gap: 9px;
+            padding: 7px 8px 7px 7px;
+            border: 1px solid #dce7df;
+            border-radius: 19px;
+            background: #f8fbf8;
+            transition: border-color 160ms ease, box-shadow 160ms ease;
+        }
+
+        .input-row:focus-within {
+            border-color: #80ad95;
+            box-shadow: 0 0 0 4px #176b5610;
+        }
+
+        textarea {
+            padding: 11px 13px;
+            color: var(--ink);
+            font-family: inherit;
+            font-size: 15px;
+        }
+
+        textarea::placeholder { color: #91a19a; }
+
+        .send {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: var(--green);
+            color: #fff;
+            font-size: 19px;
+            transition: background 160ms ease, transform 160ms ease;
+        }
+
+        .send:hover { background: var(--green-deep); }
+
+        .send:focus-visible, .clear:focus-visible {
+            outline: 3px solid #9ac85e;
+            outline-offset: 3px;
+        }
+
+        .footer {
+            padding: 11px 3px 0;
+            color: #8a9992;
+            font-size: 11px;
+        }
+
+        .clear {
+            border-radius: 7px;
+            color: #557064;
+            transition: color 160ms ease;
+        }
+
+        .clear:hover { color: var(--green); }
+        .error { color: #b34040; }
+
+        @media (max-width: 550px) {
+            body {
+                padding: 0;
+                background-size: 14px 14px;
+            }
+            .chat {
+                height: 100dvh;
+                border-radius: 0;
+                box-shadow: none;
+            }
+            header { padding: 16px 18px; }
+            .logo { width: 42px; height: 42px; }
+            .messages { padding: 24px 18px; }
+            .welcome h2 { font-size: 25px; }
+            .message { max-width: 92%; }
+            .bottom { padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); }
+            .status { padding: 7px 9px; font-size: 10px; }
+            .footer { font-size: 10px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- המעטפת הראשית של הצ'אט. -->
+    <main class="chat">
+
+        <!-- שם האפליקציה וחיווי שהממשק מוכן לשיחה. -->
+        <header>
+            <div class="brand">
+                <div class="logo">✦</div>
+                <div>
+                    <h1>SafeAI Chat</h1>
+                    <div class="subtitle">העוזר החכם שלך</div>
+                </div>
+            </div>
+
+            <div class="status">
+                <span class="dot"></span>
+                <span id="statusText">מוכן לשיחה</span>
+            </div>
+        </header>
+
+        <!-- הודעות השיחה ומסך הפתיחה שמוסר עם שליחת ההודעה הראשונה. -->
+        <section class="messages" id="messages">
+            <div class="welcome" id="welcome">
+                <div class="welcome-icon">✧</div>
+                <h2>היי, מה תרצי לדעת?</h2>
+                <div>
+                    כתבי הודעה למטה, ואני אעביר אותה למודל
+                    ואציג את התשובה כאן בזמן אמת.
+                </div>
+            </div>
+        </section>
+
+        <!-- טופס כתיבת הודעה וכפתור לפתיחת שיחה חדשה. -->
+        <div class="bottom">
+            <form id="chatForm" class="input-row">
+                <textarea
+                    id="input"
+                    placeholder="כתבי כאן הודעה..."
+                    rows="1"
+                    required
+                ></textarea>
+
+                <button class="send" id="send" type="submit"
+                        title="שליחה" aria-label="שליחה">
+                    ➤
+                </button>
+            </form>
+
+            <div class="footer">
+                <span>Powered by FastAPI + SafeAI</span>
+                <button class="clear" id="clear" type="button">
+                    ↻ שיחה חדשה
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- קוד הדפדפן: שליחת הודעות, קבלת זרם התשובה וניהול שיחה. -->
+    <script>
+        // כתובת שרת ה-FastAPI
+        const API_URL = "http://127.0.0.1:8000";;
+
+        // קישור בין רכיבי ה-HTML לבין קוד JavaScript.
+        const messagesElement = document.getElementById("messages");
+        const input = document.getElementById("input");
+        const form = document.getElementById("chatForm");
+        const sendButton = document.getElementById("send");
+        const statusText = document.getElementById("statusText");
+        const clearButton = document.getElementById("clear");
+
+        // מזהה קבוע לשיחה הנוכחית, המשמש את השרת לשמירת ההיסטוריה.
+        let sessionId = createSessionId();
+        let busy = false;
+
+        // יוצר מזהה ייחודי כדי להפריד את השיחה הזו משיחות אחרות.
+        function createSessionId() {
+            return "chat-" + crypto.randomUUID();
+        }
+
+        // משאיר את ההודעה האחרונה גלויה בתחתית אזור השיחה.
+        function scrollToBottom() {
+            messagesElement.scrollTop = messagesElement.scrollHeight;
+        }
+
+        // יוצר ומציג בועת הודעה של המשתמש או של העוזר.
+        function addMessage(text, role) {
+            const welcome = document.getElementById("welcome");
+            if (welcome) welcome.remove();
+
+            const element = document.createElement("div");
+            element.className = "message " + role;
+            element.textContent = text;
+
+            messagesElement.appendChild(element);
+            scrollToBottom();
+
+            return element;
+        }
+
+        // מונע שליחה נוספת ומעדכן את חיווי מצב המודל.
+        function setBusy(value) {
+            busy = value;
+            sendButton.disabled = value;
+            input.disabled = value;
+            statusText.textContent = value
+                ? "המודל חושב..."
+                : "מוכן לשיחה";
+        }
+
+        // שולח הודעה לשרת ומרכיב את התשובה שמגיעה בחלקים.
+        async function sendMessage(text) {
+            if (busy || !text.trim()) return;
+
+            addMessage(text, "user");
+
+            input.value = "";
+            input.style.height = "auto";
+            setBusy(true);
+
+            const answerElement = addMessage("", "assistant");
+            answerElement.classList.add("cursor");
+
+            let fullAnswer = "";
+
+            try {
+                const response = await fetch(
+                    API_URL + "/chat/stream",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            input: text,
+                            model: "gpt-4o-mini",
+                            session_id: sessionId
+                        })
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "השרת החזיר שגיאה: " + response.status
+                    );
+                }
+
+                if (!response.body) {
+                    throw new Error("השרת לא החזיר זרם תשובה.");
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+
+                let buffer = "";
+
+                while (true) {
+                    const { value, done } = await reader.read();
+
+                    buffer += decoder.decode(value, {
+                        stream: !done
+                    });
+
+                    const events = buffer.split("\n\n");
+                    buffer = events.pop() || "";
+
+                    for (const eventText of events) {
+                        const dataLine = eventText
+                            .split("\n")
+                            .find(line => line.startsWith("data:"));
+
+                        if (!dataLine) continue;
+
+                        const rawData = dataLine.slice(5).trim();
+
+                        let data;
+
+                        try {
+                            data = JSON.parse(rawData);
+                        } catch {
+                            continue;
+                        }
+
+                        if (data.type === "delta") {
+                            fullAnswer += data.text;
+                            answerElement.textContent = fullAnswer;
+                            scrollToBottom();
+                        }
+
+                        if (data.type === "usage") {
+                            const usageElement = document.createElement("div");
+                            usageElement.className = "usage";
+                            usageElement.textContent =
+                                `input_tokens: ${data.input_tokens} · ` +
+                                `output_tokens: ${data.output_tokens}`;
+                            answerElement.appendChild(usageElement);
+                        }
+
+                        if (data.type === "error") {
+                            throw new Error(data.message);
+                        }
+                    }
+
+                    if (done) break;
+                }
+
+                if (!fullAnswer) {
+                    answerElement.textContent =
+                        "המודל סיים בלי להחזיר טקסט.";
+                }
+
+            } catch (error) {
+                answerElement.textContent = fullAnswer
+                    ? fullAnswer + "\n\nהחיבור הופסק: " + error.message
+                    : "לא הצלחתי לקבל תשובה מהשרת.\n" +
+                      error.message +
+                      "\n\nבדקי שהשרת פועל בכתובת " + API_URL;
+
+                answerElement.classList.add("error");
+
+            } finally {
+                answerElement.classList.remove("cursor");
+                setBusy(false);
+                input.focus();
+                scrollToBottom();
+            }
+        }
+
+        // שליחה דרך הטופס, כולל כפתור השליחה.
+        form.addEventListener("submit", event => {
+            event.preventDefault();
+            sendMessage(input.value);
+        });
+
+        // Enter שולח; Shift+Enter מוסיף שורה בתוך ההודעה.
+        input.addEventListener("keydown", event => {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                form.requestSubmit();
+            }
+        });
+
+        // מגדיל את שדה ההקלדה לפי התוכן, עד לגובה המרבי בעיצוב.
+        input.addEventListener("input", () => {
+            input.style.height = "auto";
+            input.style.height =
+                Math.min(input.scrollHeight, 130) + "px";
+        });
+
+        // מבקש מהשרת למחוק את היסטוריית השיחה ומאפס את הממשק.
+        clearButton.addEventListener("click", async () => {
+            if (busy) return;
+
+            try {
+                const response = await fetch(
+                    API_URL + "/chat/" + encodeURIComponent(sessionId),
+                    { method: "DELETE" }
+                );
+
+                if (!response.ok) {
+                    throw new Error("לא ניתן לנקות את השיחה בשרת.");
+                }
+
+                sessionId = createSessionId();
+
+                messagesElement.innerHTML = `
+                    <div class="welcome" id="welcome">
+                        <div class="welcome-icon">✧</div>
+                        <h2>שיחה חדשה!</h2>
+                        <div>אפשר להתחיל מחדש.</div>
+                    </div>
+                `;
+
+            } catch (error) {
+                alert(
+                    "לא הצלחתי לאפס את השיחה בשרת.\n" +
+                    error.message
+                );
+            }
+        });
+    </script>
+</body>
+</html>
