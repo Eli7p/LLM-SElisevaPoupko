@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeAI Chat</title>
+
+    <!-- עיצוב הממשק: פריסה, אזור הודעות, שדה כתיבה והתאמה לנייד. -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap');
+
+        /* בסיס הדף ומעטפת הצ'אט המרכזית. */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0b1020;
+            color: #f8fafc;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat {
+            width: 100%;
+            max-width: 850px;
+            height: 90vh;
+            height: 90dvh;
+            max-height: 900px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            background: #111a2e;
+            border: 1px solid #26344e;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 80px #0005;
+        }
+
+        /* כותרת המותג ומצב החיבור. */
+        header {
+            padding: 22px 25px;
+            background: #151f35;
+            border-bottom: 1px solid #293650;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+        }
+
+        .logo {
+            width: 43px;
+            height: 43px;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #f9a83b, #ffcc72);
+            color: #10182a;
+            font-size: 23px;
+            font-weight: bold;
+        }
+
+        h1 {
+            margin: 0 0 5px;
+            font-size: 21px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: #9eafc8;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #36c98f;
+        }
+
+        /* אזור ההודעות, מסך הפתיחה והבועות של שני הצדדים. */
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+
+        .welcome {
+            margin: auto;
+            text-align: center;
+            max-width: 390px;
+            color: #b6c3d8;
+            line-height: 1.8;
+        }
+
+        .welcome-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .welcome h2 {
+            color: white;
+            font-size: 25px;
+            margin: 0 0 8px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 14px 17px;
+            border-radius: 17px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            font-size: 15px;
+        }
+
+        .user {
+            align-self: flex-start;
+            background: #f5a83c;
+            color: #172033;
+            border-bottom-right-radius: 5px;
+        }
+
+        .assistant {
+            align-self: flex-end;
+            background: #202c43;
+            border: 1px solid #30405c;
+            border-bottom-left-radius: 5px;
+            min-width: 70px;
+        }
+
+        /* חיווי כתיבה וסמן מהבהב בזמן הזרמת התשובה. */
+        .typing {
+            color: #94a3b8;
+            font-size: 13px;
+            padding: 0 5px;
+        }
+
+        .cursor::after {
+            content: "▋";
+            color: #f5a83c;
+            animation: blink 0.8s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* אזור כתיבת ההודעה, כפתור השליחה והפעולות התחתונות. */
+        .bottom {
+            padding: 18px 22px 12px;
+            border-top: 1px solid #293650;
+            background: #151f35;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            padding: 7px;
+            background: #0d1526;
+            border: 1px solid #35435c;
+            border-radius: 17px;
+        }
+
+        textarea {
+            flex: 1;
+            min-width: 0;
+            resize: none;
+            max-height: 130px;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: white;
+            font: inherit;
+            font-size: 15px;
+            padding: 11px 10px;
+            line-height: 1.5;
+        }
+
+        textarea::placeholder {
+            color: #74839c;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            font: inherit;
+        }
+
+        .send {
+            width: 43px;
+            height: 43px;
+            flex-shrink: 0;
+            border-radius: 13px;
+            background: #f5a83c;
+            color: #121a2b;
+            font-size: 20px;
+            transition: 0.2s;
+        }
+
+        .send:hover {
+            background: #ffc56d;
+            transform: translateY(-1px);
+        }
+
+        .send:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding-top: 12px;
+            color: #71819b;
+            font-size: 11px;
+        }
+
+        .clear {
+            background: transparent;
+            color: #a6b5cb;
+            padding: 5px;
+        }
+
+        .clear:hover {
+            color: #ffc56d;
+        }
+
+        /* עיצוב הודעות שגיאה ופריסת המסך בטלפונים. */
+        .error {
+            color: #ff9b9b;
+            font-size: 13px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 550px) {
+            body {
+                padding: 0;
+            }
+
+            .chat {
+                height: 100vh;
+                height: 100dvh;
+                max-height: none;
+                min-height: 0;
+                border-radius: 0;
+                border: none;
+            }
+
+            header {
+                padding: 17px;
+            }
+
+            .messages {
+                padding: 17px;
+            }
+
+            .bottom {
+                padding: 12px;
+            }
+
+            .message {
+                max-width: 92%;
+            }
+
+            .status {
+                font-size: 10px;
+            }
+        }
+        :root {
+            color-scheme: light;
+            --ink: #19352f;
+            --muted: #71827d;
+            --green: #176b56;
+            --green-deep: #104b3d;
+            --lime: #d7f36a;
+            --line: #e3ebe6;
+            --surface: #fbfdfb;
+        }
+
+        body {
+            padding: 28px;
+            font-family: 'Heebo', sans-serif;
+            color: var(--ink);
+            background-color: #edf4ef;
+            background-image: radial-gradient(#c9d9d0 0.7px, transparent 0.7px);
+            background-size: 18px 18px;
+        }
+
+        .chat {
+            max-width: 980px;
+            height: min(880px, 92dvh);
+            min-height: 480px;
+            background: var(--surface);
+            border: 1px solid #dce8e0;
+            border-radius: 24px;
+            box-shadow: 0 28px 80px #173f3020, 0 4px 14px #173f300c;
+            animation: arrive 500ms ease-out both;
+        }
+
+        @keyframes arrive {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        header {
+            padding: 20px 28px;
+            background: #fff;
+            border-bottom-color: var(--line);
+        }
+
+        .brand { gap: 14px; }
+
+        .logo {
+            width: 46px;
+            height: 46px;
+            border-radius: 15px;
+            background: var(--green);
+            color: var(--lime);
+            font-size: 25px;
+            box-shadow: 0 5px 12px #176b5628;
+        }
+
+        h1 {
+            margin-bottom: 1px;
+            color: var(--ink);
+            font-size: 19px;
+            font-weight: 800;
+        }
+
+        .subtitle { color: var(--muted); font-size: 13px; }
+
+        .status {
+            padding: 8px 12px;
+            border: 1px solid #e2ece5;
+            border-radius: 999px;
+            background: #f5faf6;
+            color: #536a60;
+            font-size: 12px;
+        }
+
+        .dot {
+            background: #36a779;
+            box-shadow: 0 0 0 3px #36a77920;
+        }
+
+        .messages {
+            padding: 34px clamp(20px, 7vw, 76px);
+            gap: 18px;
+            background: linear-gradient(180deg, #f8fbf8 0%, #fbfdfb 100%);
+        }
+
+        .welcome {
+            max-width: 470px;
+            color: #71827d;
+            font-size: 15px;
+            line-height: 1.9;
+            animation: arrive 650ms 100ms ease-out both;
+        }
+
+        .welcome-icon {
+            display: grid;
+            width: 58px;
+            height: 58px;
+            place-items: center;
+            margin: 0 auto 20px;
+            border: 1px solid #e1ebd0;
+            border-radius: 19px;
+            background: #f1f8df;
+            color: var(--green);
+            font-size: 29px;
+        }
+
+        .welcome h2 {
+            margin-bottom: 9px;
+            color: var(--ink);
+            font-size: 29px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        .message {
+            max-width: min(78%, 650px);
+            padding: 13px 18px;
+            border-radius: 18px;
+            line-height: 1.8;
+            font-size: 15px;
+            animation: arrive 220ms ease-out both;
+        }
+
+        .user {
+            background: var(--green);
+            color: #fff;
+            border-bottom-right-radius: 5px;
+        }
+
+        .teacher {
+            background: #f1f8df;
+            border: 1px solid #e1ebd0;
+            border-bottom-right-radius: 5px;
+            color: var(--ink);
+        }
+
+        .assistant {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 3px 10px #1d4b3908;
+        }
+
+        .usage {
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px dashed var(--line);
+            color: #8a9992;
+            direction: ltr;
+            font-size: 11px;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .typing { color: var(--muted); }
+        .cursor::after { color: #6e9d30; }
+
+        .bottom {
+            padding: 18px 28px 15px;
+            border-top-color: var(--line);
+            background: #fff;
+        }
+
+        .input-panel {
+            display: grid;
+            gap: 12px;
+        }
+
+        .input-field {
+            display: grid;
+            gap: 6px;
+        }
+
+        .input-field label {
+            color: var(--ink);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .input-field textarea {
+            width: 100%;
+            min-height: 66px;
+            max-height: 110px;
+            padding: 10px 12px;
+            border: 1px solid #dce7df;
+            border-radius: 13px;
+            background: #f8fbf8;
+            transition: border-color 160ms ease, box-shadow 160ms ease;
+        }
+
+        .input-field textarea:focus {
+            border-color: #80ad95;
+            outline: none;
+            box-shadow: 0 0 0 3px #176b5610;
+        }
+
+        .input-row:focus-within {
+            border-color: #80ad95;
+            box-shadow: 0 0 0 4px #176b5610;
+        }
+
+        textarea {
+            padding: 11px 13px;
+            color: var(--ink);
+            font-family: inherit;
+            font-size: 15px;
+        }
+
+        textarea::placeholder { color: #91a19a; }
+
+        .send {
+            min-height: 44px;
+            padding: 9px 16px;
+            border-radius: 13px;
+            background: var(--green);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            transition: background 160ms ease, transform 160ms ease;
+        }
+
+        .send:hover { background: var(--green-deep); }
+
+        .send:focus-visible, .clear:focus-visible {
+            outline: 3px solid #9ac85e;
+            outline-offset: 3px;
+        }
+
+        .footer {
+            padding: 11px 3px 0;
+            color: #8a9992;
+            font-size: 11px;
+        }
+
+        .clear {
+            border-radius: 7px;
+            color: #557064;
+            transition: color 160ms ease;
+        }
+
+        .clear:hover { color: var(--green); }
+        .error { color: #b34040; }
+
+        @media (max-width: 550px) {
+            body {
+                padding: 0;
+                background-size: 14px 14px;
+            }
+            .chat {
+                height: 100dvh;
+                border-radius: 0;
+                box-shadow: none;
+            }
+            header { padding: 16px 18px; }
+            .logo { width: 42px; height: 42px; }
+            .messages { padding: 24px 18px; }
+            .welcome h2 { font-size: 25px; }
+            .message { max-width: 92%; }
+            .bottom { padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); }
+            .status { padding: 7px 9px; font-size: 10px; }
+            .footer { font-size: 10px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            height: auto;
+            padding: clamp(18px, 4vh, 34px) 24px;
+            color: #26344a;
+            font-family: 'Heebo', 'Segoe UI', Arial, sans-serif;
+            background:
+                radial-gradient(ellipse at 85% 0%, #fff5e7 0, transparent 35%),
+                radial-gradient(ellipse at 5% 90%, #e9f1ff 0, transparent 38%),
+                #f5f7fb;
+        }
+
+        .app-shell {
+            width: min(1000px, 100%);
+            display: grid;
+            gap: 18px;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 16px;
+            border: 1px solid #e8edf4;
+            border-radius: 18px;
+            background: #ffffffd9;
+            box-shadow: 0 5px 18px #34435c08;
+        }
+
+        .app-header .logo {
+            width: 46px;
+            height: 46px;
+            border-radius: 15px;
+            background: linear-gradient(145deg, #fff0d7, #ffe2b2);
+            color: #bd761f;
+            box-shadow: none;
+        }
+
+        .app-header h1 {
+            margin: 0;
+            color: #253249;
+            font-size: 23px;
+            font-weight: 800;
+        }
+
+        .app-subtitle {
+            margin-top: 3px;
+            color: #778196;
+            font-size: 14px;
+        }
+
+        .workspace {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 225px;
+            gap: 18px;
+            align-items: start;
+        }
+
+        .work-card {
+            min-width: 0;
+            padding: clamp(20px, 3vw, 30px);
+            border: 1px solid #e6ebf2;
+            border-radius: 22px;
+            background: #fff;
+            box-shadow: 0 18px 48px #27364c0d, 0 2px 8px #27364c08;
+        }
+
+        .card-heading {
+            margin-bottom: 18px;
+            padding: 17px 19px;
+            border: 1px solid #f5e7d3;
+            border-right: 4px solid #e8a142;
+            border-radius: 14px;
+            background: linear-gradient(115deg, #fffaf2, #fff);
+        }
+
+        .card-kicker {
+            color: #b17831;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .card-heading h2 {
+            margin: 6px 0 4px;
+            color: #26344a;
+            font-size: clamp(23px, 4vw, 30px);
+        }
+
+        .card-heading p {
+            margin: 0;
+            color: #748096;
+            font-size: 14px;
+        }
+
+        .answer-field {
+            display: grid;
+            gap: 9px;
+        }
+
+        .answer-field label {
+            color: #39465b;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        #studentAnswer {
+            width: 100%;
+            min-height: 125px;
+            max-height: 360px;
+            resize: vertical;
+            padding: 14px 16px;
+            border: 1px solid #dfe5ee;
+            border-radius: 14px;
+            background: #fbfcfe;
+            color: #26344a;
+            font: inherit;
+            font-size: 15px;
+            line-height: 1.7;
+            box-shadow: inset 0 1px 2px #27364c08;
+            transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+        }
+
+        #studentAnswer::placeholder { color: #a0a8b5; }
+
+        #studentAnswer:focus {
+            border-color: #7b9bd1;
+            outline: none;
+            background: #fff;
+            box-shadow: 0 0 0 4px #456fc514;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-start;
+            margin-top: 12px;
+        }
+
+        .send {
+            min-width: 150px;
+            min-height: 45px;
+            padding: 9px 20px;
+            border-radius: 12px;
+            background: #416fc4;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 800;
+            box-shadow: 0 5px 12px #244b9720;
+            transition: background 160ms ease, transform 160ms ease;
+        }
+
+        .send:hover:not(:disabled) {
+            background: #315cae;
+            transform: translateY(-1px);
+        }
+
+        .send:disabled { cursor: wait; opacity: .7; }
+
+        .messages {
+            display: grid;
+            gap: 12px;
+            padding: 16px 0 0;
+            overflow: visible;
+        }
+
+        .welcome {
+            max-width: none;
+            padding: 15px 17px;
+            border: 1px dashed #d9e0eb;
+            border-radius: 13px;
+            background: #fafbfd;
+            color: #788398;
+            font-size: 13px;
+            text-align: right;
+        }
+
+        .welcome-icon { display: none; }
+        .welcome h2 { margin: 0 0 4px; color: #43516a; font-size: 15px; }
+
+        .review-card {
+            overflow: hidden;
+            border: 1px solid #e9edf3;
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 8px 24px #2933440b;
+            animation: arrive 220ms ease-out both;
+        }
+
+        .review-heading {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 18px;
+            border-bottom: 1px solid #edf0f4;
+            color: #43516a;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .review-answer {
+            margin: 0;
+            padding: 14px 18px;
+            color: #647087;
+            font-size: 14px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .review-results {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            padding: 0 14px 14px;
+        }
+
+        .result-panel {
+            min-width: 0;
+            padding: 14px;
+            border: 1px solid #edf0f4;
+            border-radius: 14px;
+            background: #fafbfd;
+        }
+
+        .result-panel h3 {
+            margin: 0 0 8px;
+            color: #778196;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .result-panel p,
+        .result-panel ul {
+            margin: 0;
+            color: #344158;
+            font-size: 14px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .score-panel {
+            display: flex;
+            grid-column: 1 / -1;
+            align-items: center;
+            justify-content: space-between;
+            background: #f2f6ff;
+        }
+
+        .score-panel h3 { margin: 0; color: #536787; }
+        .score-value { color: #315cae !important; font-size: 25px !important; font-weight: 800; }
+        .improvements { padding-right: 20px !important; }
+
+        .review-error {
+            margin: 0 14px 14px;
+            padding: 12px;
+            border-radius: 12px;
+            background: #fff1f0;
+            color: #a33e36;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .status-card {
+            padding: 20px 18px;
+            border: 1px solid #e2e8f1;
+            border-radius: 18px;
+            background: linear-gradient(155deg, #fff, #f9fbff);
+            box-shadow: 0 12px 32px #2933440a;
+        }
+
+        .status-badge {
+            display: grid;
+            width: 50px;
+            height: 50px;
+            margin-bottom: 15px;
+            place-items: center;
+            border-radius: 16px;
+            background: #fff2df;
+            color: #c6812d;
+            font-size: 23px;
+        }
+
+        .status-card h2 {
+            margin: 0 0 7px;
+            color: #2d3b52;
+            font-size: 17px;
+        }
+
+        .status-card p {
+            margin: 0;
+            color: #7b8698;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 18px;
+            padding: 8px 11px;
+            border: 1px solid #deeee4;
+            border-radius: 999px;
+            background: #f5fbf7;
+            color: #3b7655;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .status-indicator .dot {
+            width: 8px;
+            height: 8px;
+            background: #3fa871;
+            box-shadow: 0 0 0 3px #3fa8711c;
+        }
+
+        .app-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 0 4px;
+            color: #8a93a2;
+            font-size: 12px;
+        }
+
+        .clear {
+            padding: 8px 12px;
+            border: 1px solid #dfe5ee;
+            border-radius: 10px;
+            background: #fff;
+            color: #56647a;
+            font: inherit;
+            transition: color 160ms ease, border-color 160ms ease;
+        }
+
+        .clear:hover { border-color: #b8c8e3; color: #315cae; }
+
+        @media (max-width: 700px) {
+            body { padding: 20px 14px; }
+            .workspace { grid-template-columns: 1fr; }
+            .status-card {
+                display: grid;
+                grid-template-columns: auto 1fr;
+                column-gap: 14px;
+                align-items: center;
+                padding: 14px;
+            }
+            .status-badge { grid-row: span 2; margin: 0; }
+            .status-card h2 { align-self: end; }
+            .status-card p { align-self: start; }
+            .status-indicator { grid-column: 2; width: fit-content; margin-top: 8px; }
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 16px 12px; }
+            .app-shell { gap: 15px; }
+            .app-header .logo { width: 44px; height: 44px; }
+            .app-header h1 { font-size: 19px; }
+            .app-subtitle { font-size: 12px; }
+            .work-card { padding: 16px 13px; border-radius: 18px; }
+            .card-heading { padding: 14px; }
+            .review-results { grid-template-columns: 1fr; }
+            .score-panel { grid-column: auto; }
+            .app-footer { font-size: 11px; }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="app-shell">
+        <header class="app-header">
+            <div class="logo" aria-hidden="true">✦</div>
+            <div>
+                <h1>בודקות ביחד</h1>
+                <div class="app-subtitle">משוב חכם שיעזור לך להשתפר</div>
+            </div>
+        </header>
+
+        <div class="workspace">
+            <section class="work-card">
+                <div class="card-heading">
+                    <div class="card-kicker">מרחב הלמידה שלך</div>
+                    <h2>בדיקת תשובה</h2>
+                    <p>כתבי את הפתרון שלך וקבלי ציון, משוב והצעות לשיפור.</p>
+                </div>
+
+                <form id="chatForm">
+                    <div class="answer-field">
+                        <label for="studentAnswer">התשובה שלך</label>
+                        <textarea
+                            id="studentAnswer"
+                            placeholder="כתבי כאן את התשובה שלך..."
+                            required
+                        ></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button class="send" id="send" type="submit">
+                            הגשת תשובה
+                        </button>
+                    </div>
+                </form>
+
+                <section
+                    class="messages"
+                    id="messages"
+                    aria-live="polite"
+                    aria-label="תוצאות בדיקת התשובות"
+                >
+                    <div class="welcome" id="welcome">
+                        <h2>מוכנה להתחיל?</h2>
+                        <div>המשוב האישי שלך יופיע כאן לאחר הגשת התשובה.</div>
+                    </div>
+                </section>
+            </section>
+
+            <aside class="status-card">
+                <div class="status-badge" aria-hidden="true">✓</div>
+                <h2>בדיקה במערכת</h2>
+                <p>התשובה נבדקת באופן אישי לפי הוראות התרגיל.</p>
+                <div class="status-indicator">
+                    <span class="dot"></span>
+                    <span id="statusText">מוכנה לבדיקה</span>
+                </div>
+            </aside>
+        </div>
+
+        <footer class="app-footer">
+            <span>הלמידה שלך, הצעד הבא שלך.</span>
+            <button class="clear" id="clear" type="button">
+                ↻ התחלה מחדש
+            </button>
+        </footer>
+    </main>
+
+    <script>
+        // כתובת שרת ה-FastAPI
+        const API_URL = "http://127.0.0.1:8000";
+
+        const messagesElement = document.getElementById("messages");
+        const studentAnswerInput = document.getElementById("studentAnswer");
+        const form = document.getElementById("chatForm");
+        const sendButton = document.getElementById("send");
+        const statusText = document.getElementById("statusText");
+        const clearButton = document.getElementById("clear");
+
+        let sessionId = createSessionId();
+        let busy = false;
+
+        function createSessionId() {
+            return "chat-" + crypto.randomUUID();
+        }
+
+        function setBusy(value) {
+            busy = value;
+            sendButton.disabled = value;
+            studentAnswerInput.disabled = value;
+            statusText.textContent = value
+                ? "בודקת את התשובה..."
+                : "מוכנה לבדיקה";
+            sendButton.textContent = value
+                ? "בודקת..."
+                : "הגשת תשובה";
+        }
+
+        function createReviewCard(studentAnswer) {
+            const welcome = document.getElementById("welcome");
+            if (welcome) welcome.remove();
+
+            const card = document.createElement("article");
+            card.className = "review-card";
+
+            const heading = document.createElement("div");
+            heading.className = "review-heading";
+            heading.textContent = "התשובה שהגשת";
+
+            const answer = document.createElement("p");
+            answer.className = "review-answer";
+            answer.textContent = studentAnswer;
+
+            const results = document.createElement("div");
+            results.className = "review-results";
+
+            const scorePanel = document.createElement("div");
+            scorePanel.className = "result-panel score-panel";
+            const scoreTitle = document.createElement("h3");
+            scoreTitle.textContent = "הציון שלך";
+            const scoreValue = document.createElement("p");
+            scoreValue.className = "score-value";
+            scoreValue.textContent = "—";
+            scorePanel.append(scoreTitle, scoreValue);
+
+            const feedbackPanel = document.createElement("div");
+            feedbackPanel.className = "result-panel";
+            const feedbackTitle = document.createElement("h3");
+            feedbackTitle.textContent = "משוב אישי";
+            const feedback = document.createElement("p");
+            feedback.textContent = "המשוב יופיע כאן לאחר הבדיקה.";
+            feedbackPanel.append(feedbackTitle, feedback);
+
+            const improvementsPanel = document.createElement("div");
+            improvementsPanel.className = "result-panel";
+            const improvementsTitle = document.createElement("h3");
+            improvementsTitle.textContent = "רשימת שיפורים";
+            const improvements = document.createElement("ul");
+            improvements.className = "improvements";
+            improvementsPanel.append(improvementsTitle, improvements);
+
+            const error = document.createElement("p");
+            error.className = "review-error";
+            error.hidden = true;
+
+            results.append(scorePanel, feedbackPanel, improvementsPanel);
+            card.append(heading, answer, results, error);
+            messagesElement.prepend(card);
+
+            return { card, scoreValue, feedback, improvements, error };
+        }
+
+        function renderReview(review, text, complete = false) {
+            const score = text.match(
+                /ציון:\s*(.+?)(?=\r?\n(?:משוב|רשימת שיפורים):|$)/s
+            );
+            const feedbackMatch = text.match(
+                /(?:^|\r?\n)משוב:\s*([\s\S]*?)(?=\r?\nרשימת שיפורים:|$)/
+            );
+            const improvementsMatch = text.match(
+                /(?:^|\r?\n)רשימת שיפורים:\s*([\s\S]*)$/
+            );
+
+            review.scoreValue.textContent = score
+                ? score[1].trim()
+                : complete ? "לא צוין" : "ממתין";
+            review.feedback.textContent = feedbackMatch
+                ? feedbackMatch[1].trim()
+                : complete && !score
+                    ? text
+                    : "המשוב יופיע כאן לאחר הבדיקה.";
+
+            review.improvements.replaceChildren();
+            const suggestions = improvementsMatch
+                ? improvementsMatch[1]
+                    .split(/\r?\n/)
+                    .map(line => line.replace(/^\s*[-*•]\s*/, "").trim())
+                    .filter(Boolean)
+                : [];
+
+            if (suggestions.length) {
+                suggestions.forEach(suggestion => {
+                    const item = document.createElement("li");
+                    item.textContent = suggestion;
+                    review.improvements.appendChild(item);
+                });
+            } else {
+                const item = document.createElement("li");
+                item.textContent = complete
+                    ? "לא התקבלה רשימת שיפורים."
+                    : "הצעות לשיפור יופיעו כאן.";
+                review.improvements.appendChild(item);
+            }
+        }
+
+        async function sendAnswer(studentAnswer) {
+            if (busy || !studentAnswer.trim()) return;
+
+            const review = createReviewCard(studentAnswer);
+            studentAnswerInput.value = "";
+            setBusy(true);
+
+            let fullAnswer = "";
+
+            try {
+                const response = await fetch(API_URL + "/chat/stream", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        input: studentAnswer,
+                        model: "gpt-4o-mini",
+                        session_id: sessionId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("השרת החזיר שגיאה: " + response.status);
+                }
+                if (!response.body) {
+                    throw new Error("השרת לא החזיר זרם תשובה.");
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+                let buffer = "";
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    buffer += decoder.decode(value, { stream: !done });
+                    const events = buffer.split("\n\n");
+                    buffer = events.pop() || "";
+
+                    for (const eventText of events) {
+                        const dataLine = eventText
+                            .split("\n")
+                            .find(line => line.startsWith("data:"));
+                        if (!dataLine) continue;
+
+                        let data;
+                        try {
+                            data = JSON.parse(dataLine.slice(5).trim());
+                        } catch {
+                            continue;
+                        }
+
+                        if (data.type === "delta") {
+                            fullAnswer += data.text;
+                            renderReview(review, fullAnswer);
+                        } else if (data.type === "error") {
+                            throw new Error(data.message);
+                        }
+                    }
+
+                    if (done) break;
+                }
+
+                if (!fullAnswer) {
+                    throw new Error("המודל סיים בלי להחזיר תשובה.");
+                }
+                renderReview(review, fullAnswer, true);
+            } catch (error) {
+                review.error.hidden = false;
+                review.error.textContent =
+                    "לא הצלחתי לבדוק את התשובה. " +
+                    error.message +
+                    " בדקי שהשרת פועל בכתובת " + API_URL;
+            } finally {
+                setBusy(false);
+                studentAnswerInput.focus();
+            }
+        }
+
+        form.addEventListener("submit", event => {
+            event.preventDefault();
+            if (!form.reportValidity()) return;
+            sendAnswer(studentAnswerInput.value);
+        });
+
+        clearButton.addEventListener("click", async () => {
+            if (busy) return;
+
+            try {
+                const response = await fetch(
+                    API_URL + "/chat/" + encodeURIComponent(sessionId),
+                    { method: "DELETE" }
+                );
+
+                if (!response.ok) {
+                    throw new Error("לא ניתן לנקות את השיחה בשרת.");
+                }
+
+                sessionId = createSessionId();
+                studentAnswerInput.value = "";
+                messagesElement.replaceChildren();
+                const welcome = document.createElement("div");
+                welcome.className = "welcome";
+                welcome.id = "welcome";
+                const title = document.createElement("h2");
+                title.textContent = "מוכנה להתחיל?";
+                const message = document.createElement("div");
+                message.textContent =
+                    "המשוב האישי שלך יופיע כאן לאחר הגשת התשובה.";
+                welcome.append(title, message);
+                messagesElement.appendChild(welcome);
+
+            } catch (error) {
+                alert(
+                    "לא הצלחתי לאפס את השיחה בשרת.\n" +
+                    error.message
+                );
+            }
+        });
+    </script>
+</body>
+</html>

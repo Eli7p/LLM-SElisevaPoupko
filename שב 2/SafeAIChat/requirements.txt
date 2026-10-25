@@ -1,0 +1,12 @@
+
+# שרת ה-API והפעלתו המקומית.
+fastapi
+uvicorn
+
+# לקוח לשירות המודל ותקשורת HTTP מאובטחת.
+openai
+httpx
+truststore
+
+# טעינת הגדרות מקובץ .env.
+python-dotenv
