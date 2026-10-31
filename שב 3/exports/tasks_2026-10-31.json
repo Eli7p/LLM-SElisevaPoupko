@@ -1,0 +1,23 @@
+[
+  {
+    "id": "TFS-101",
+    "title": "להכין מצגת לפגישת הצוות",
+    "urgency": "גבוהה",
+    "estimate_min_minutes": 60,
+    "estimate_max_minutes": 90
+  },
+  {
+    "id": "TFS-102",
+    "title": "לבדוק דיווח תקלה",
+    "urgency": "גבוהה",
+    "estimate_min_minutes": 45,
+    "estimate_max_minutes": 75
+  },
+  {
+    "id": "TFS-103",
+    "title": "לשלוח סיכום פגישה",
+    "urgency": "בינונית",
+    "estimate_min_minutes": 20,
+    "estimate_max_minutes": 30
+  }
+]

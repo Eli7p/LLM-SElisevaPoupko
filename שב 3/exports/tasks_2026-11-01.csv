@@ -1,0 +1,4 @@
+﻿id,title,urgency,estimate_min_minutes,estimate_max_minutes
+TFS-201,לתכנן את משימות השבוע,גבוהה,30,45
+TFS-202,להכין טיוטת מסמך,בינונית,45,90
+TFS-203,לעדכן את לוח הפרויקט,בינונית,20,35

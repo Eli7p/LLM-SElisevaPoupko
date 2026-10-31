@@ -1,0 +1,4 @@
+﻿id,title,urgency,estimate_min_minutes,estimate_max_minutes
+TFS-101,להכין מצגת לפגישת הצוות,גבוהה,60,90
+TFS-102,לבדוק דיווח תקלה,גבוהה,45,75
+TFS-103,לשלוח סיכום פגישה,בינונית,20,30

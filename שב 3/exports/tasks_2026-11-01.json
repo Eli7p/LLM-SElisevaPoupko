@@ -1,0 +1,23 @@
+[
+  {
+    "id": "TFS-201",
+    "title": "לתכנן את משימות השבוע",
+    "urgency": "גבוהה",
+    "estimate_min_minutes": 30,
+    "estimate_max_minutes": 45
+  },
+  {
+    "id": "TFS-202",
+    "title": "להכין טיוטת מסמך",
+    "urgency": "בינונית",
+    "estimate_min_minutes": 45,
+    "estimate_max_minutes": 90
+  },
+  {
+    "id": "TFS-203",
+    "title": "לעדכן את לוח הפרויקט",
+    "urgency": "בינונית",
+    "estimate_min_minutes": 20,
+    "estimate_max_minutes": 35
+  }
+]
